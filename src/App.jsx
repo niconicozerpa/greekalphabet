@@ -19,7 +19,7 @@ const greekLetters = [
   ["Ο", "ο", "όμικρον", "O", "Omicron"],
   ["Π", "π", "πι", "P", "Pi"],
   ["Ρ", "ρ", "ρω", "R", "Rhô"],
-  ["Σ", "σ ς", "σίγμα", "S", "Sigma"],
+  ["Σ", ["σ", "ς"], "σίγμα", "S", "Sigma"],
   ["Τ", "τ", "ταυ", "T", "Tau"],
   ["Υ", "υ", "ύψιλον", "U", "Upsilon"],
   ["Φ", "φ", "φι", "PH", "Phi"],
@@ -28,41 +28,79 @@ const greekLetters = [
   ["Ω", "ω", "ωμέγα", "Ô", "Ôméga"]
 ];
 
-function createLetterIndex() {
-  return Math.round(Math.random() * (greekLetters.length - 1));
+const lettersToDisplayQty = greekLetters.map(
+  function ([,lcLetter]) {
+    if (Array.isArray(lcLetter)) {
+      return 1 + parseInt(lcLetter.length);
+    } else {
+      return 2;
+    }
+  }
+).reduce((acc, value) => acc + value, 0);
+
+function pickRandomLetter(usedLetters) {
+  let letterToDisplay = null;
+
+  let letterIndex, ucLetter, lcLetter, greekName, romanLetter, romanName;
+
+  do {
+    letterIndex = Math.round(Math.random() * (greekLetters.length - 1));
+    [ucLetter, lcLetter, greekName, romanLetter, romanName] = greekLetters[letterIndex];
+
+    let finalLcLetter;
+    if (Array.isArray(lcLetter)) {
+      finalLcLetter = lcLetter[Math.round(Math.random() * 1)];
+    } else {
+      finalLcLetter = lcLetter;
+    }
+    letterToDisplay = [ucLetter, finalLcLetter][Math.round(Math.random() * 1)];
+
+  } while (usedLetters.includes(letterToDisplay));
+
+  return {
+    letterToDisplay,
+    ucLetter,
+    lcLetter: Array.isArray(lcLetter) ? lcLetter.join(" ") : lcLetter,
+    greekName,
+    romanLetter,
+    romanName
+  }
 }
 
 function App() {
-  const [letterIndex, setLetterIndex] = useState(createLetterIndex());
-  const [caseIndex, setCaseIndex] = useState(Math.round(Math.random() * 1));
-  const [reveal, setReveal] = useState(false);
-  const [ucLetter, lcLetter, greekName, romanLetter, romanName] = greekLetters[letterIndex];
 
-  const letterToDisplay = [ucLetter, lcLetter][caseIndex];
+  const [letter, setLetter] = useState(pickRandomLetter([]));
+  const [reveal, setReveal] = useState(false);
+  const [usedLetters, setUsedLetters] = useState([letter.letterToDisplay]);
 
   function tryAnotherLetter() {
+    const newLetter = pickRandomLetter(usedLetters);
     setReveal(false);
-    setCaseIndex(Math.round(Math.random() * 1));
-    setLetterIndex(createLetterIndex());
+    setLetter(newLetter);
+
+    if ((usedLetters.length + 1) >= lettersToDisplayQty) {
+      setUsedLetters([]);
+    } else {
+      setUsedLetters([...usedLetters, newLetter.letterToDisplay]);
+    }
   }
 
   return <div className="app">
     <div>Guess the Greek letter!</div>
-    <div className="letter">{letterToDisplay}</div>
+    <div className="letter">{letter.letterToDisplay}</div>
     
     <div className="buttons">
       { reveal ? null : <button type="button" onClick={() => setReveal(true)}>Reveal</button> }
       { reveal ? (
       <div className="revealed">
-        <div className="greekLetter">{ucLetter} {lcLetter}</div>
-        <div className="greekName">{greekName}</div>
-        <div className="romanLetter">{romanLetter}</div>
-        <div className="romanName">{romanName}</div>
+        <div className="greekLetter">{letter.ucLetter} {letter.lcLetter}</div>
+        <div className="greekName">{letter.greekName}</div>
+        <div className="romanLetter">{letter.romanLetter}</div>
+        <div className="romanName">{letter.romanName}</div>
       </div>
       ) : null }
       <button type="button" onClick={tryAnotherLetter}>Try another letter</button>
     </div>
-  
   </div>
 }
 
