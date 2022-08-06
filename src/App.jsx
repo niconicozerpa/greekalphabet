@@ -71,23 +71,28 @@ function App() {
 
   const [letter, setLetter] = useState(pickRandomLetter([]));
   const [reveal, setReveal] = useState(false);
-  const [usedLetters, setUsedLetters] = useState([letter.letterToDisplay]);
+  const [usedLetters, setUsedLetters] = useState([]);
 
   function tryAnotherLetter() {
-    const newLetter = pickRandomLetter(usedLetters);
+    let newUsedLetters;
+    if ((usedLetters.length + 1) >= lettersToDisplayQty) {
+      newUsedLetters = [];
+    } else {
+      newUsedLetters = [...usedLetters, letter.letterToDisplay];
+    }
+    setUsedLetters(newUsedLetters);
+
+    const newLetter = pickRandomLetter(newUsedLetters);
     setReveal(false);
     setLetter(newLetter);
-
-    if ((usedLetters.length + 1) >= lettersToDisplayQty) {
-      setUsedLetters([]);
-    } else {
-      setUsedLetters([...usedLetters, newLetter.letterToDisplay]);
-    }
   }
 
   return <div className="app">
     <div>Guess the Greek letter!</div>
-    <div className="letter">{letter.letterToDisplay}</div>
+    <div className="letter">
+      {letter.letterToDisplay}
+      <span className="serif">{letter.letterToDisplay}</span>
+    </div>
     
     <div className="buttons">
       { reveal ? null : <button type="button" onClick={() => setReveal(true)}>Reveal</button> }
